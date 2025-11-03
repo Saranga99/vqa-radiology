@@ -1,35 +1,62 @@
-# 🩻 Visual Question Answering in Radiology (VQA-RAD)
+# Medical Visual Question Answering (VQA-RAD)
 
-An **end-to-end Medical Visual Question Answering (VQA)** system built using the **VQA-RAD** dataset.
-This project demonstrates how to combine **deep learning for images (ResNet)** and **language models (BERT)** to answer natural-language questions about medical images (e.g., “Are regions of the brain infarcted?”).
-
----
-
-## 🧩 Project Overview
-
-The goal of this project is to enable a model to read and interpret radiology images—such as X-rays, MRIs, and CT scans—and respond accurately to questions in plain English.
-
-### 🔍 Key Objectives
-
-* Preprocess and normalize the VQA-RAD dataset.
-* Build a multimodal deep learning model combining visual and textual representations.
-* Train and evaluate the model on the medical Q&A pairs.
-* Deploy the trained model through an interactive **Streamlit web app**.
+This project implements an end-to-end **Medical Visual Question Answering (VQA)** system using the **VQA-RAD** dataset. The model takes a medical image (e.g., X-ray, MRI, CT scan) and a natural language question as input, then generates an appropriate answer. It combines computer vision and natural language understanding techniques to enable multimodal reasoning within the medical domain.
 
 ---
 
-## 🏗️ Architecture
+## 1. Project Overview
 
-| Component           | Description                                                                               |
-| ------------------- | ----------------------------------------------------------------------------------------- |
-| **Visual Encoder**  | A pretrained **ResNet-50** extracts image features from medical scans.                    |
-| **Text Encoder**    | A **BERT** model converts natural-language questions into vector embeddings.              |
-| **Fusion Layer**    | Image and question embeddings are concatenated and passed through fully connected layers. |
-| **Classifier Head** | Predicts the most likely answer from a fixed vocabulary of unique answers.                |
+The goal of this project is to build a deep learning system that:
+
+* Understands medical questions in natural language.
+* Analyzes medical images (radiology scans).
+* Predicts accurate answers based on the visual and textual context.
+
+This is achieved through a **ResNet-50 + BERT fusion model**, which jointly encodes the image and question features and classifies the answer from a learned vocabulary.
 
 ---
 
-## 🗂️ Folder Structure
+## 2. Dataset
+
+**Dataset Used:** [VQA-RAD (Radiology Visual Question Answering Dataset)](https://osf.io/89kps/files)
+
+**Description:**
+
+* Contains 315 medical images and over 3,500 question-answer pairs.
+* Covers a range of modalities such as CT, MRI, and X-ray.
+* Includes both **closed-ended** (Yes/No) and **open-ended** questions.
+
+**Example:**
+
+| Image           | Question                            | Answer |
+| --------------- | ----------------------------------- | ------ |
+| synpic54610.jpg | Are regions of the brain infarcted? | Yes    |
+| synpic29265.jpg | Is the lung expanded?               | No     |
+
+---
+
+## 3. System Architecture
+
+### **Model Pipeline**
+
+```
+Image → ResNet50 → Visual Embedding
+Question → BERT → Text Embedding
+Concatenation → Fully Connected Layers → Answer Prediction
+```
+
+### **Core Components**
+
+| Component          | Description                                            |
+| ------------------ | ------------------------------------------------------ |
+| **Visual Encoder** | Pretrained ResNet-50 extracts 2048-dim image features. |
+| **Text Encoder**   | BERT-base-uncased encodes question semantics.          |
+| **Fusion Layer**   | Concatenates embeddings and passes through an MLP.     |
+| **Classifier**     | Outputs softmax probabilities across possible answers. |
+
+---
+
+## 4. Folder Structure
 
 ```
 VQA-RADIOLOGY/
@@ -38,8 +65,7 @@ VQA-RADIOLOGY/
 │   └── osfstorage/
 │       ├── VQA_RAD Image Folder/
 │       ├── VQA_RAD Dataset Public.json
-│       ├── VQA_RAD Dataset Public.xlsx
-│       └── VQA_RAD Dataset Public.xml
+│       └── Readme.docx
 │
 ├── src/
 │   ├── __init__.py
@@ -59,184 +85,133 @@ VQA-RADIOLOGY/
 │   ├── app.py
 │   └── requirements.txt
 │
-├── .gitignore
-├── LICENSE
 └── README.md
 ```
 
 ---
 
-## ⚙️ Setup Instructions
+## 5. Setup Instructions
 
-### 1️⃣ Create Environment
+### **Step 1. Environment Setup**
+
+Create and activate a virtual environment:
 
 ```bash
 python -m venv .venv
-.\.venv\Scripts\activate
+.\.venv\Scripts\activate     # Windows
+source .venv/bin/activate    # Linux/Mac
 ```
 
-### 2️⃣ Install Dependencies
+### **Step 2. Install Dependencies**
 
 ```bash
 pip install -r app/requirements.txt
 ```
 
-### 3️⃣ Verify Dataset Paths
+### **Step 3. Dataset Placement**
 
-Ensure the paths in `src/config.py` match your folder layout:
+Ensure the dataset files are structured as follows:
 
-```python
-class Config:
-    DATA_JSON = "data/osfstorage/VQA_RAD Dataset Public.json"
-    IMG_DIR = "data/osfstorage/VQA_RAD Image Folder"
+```
+data/osfstorage/
+  ├── VQA_RAD Dataset Public.json
+  └── VQA_RAD Image Folder/
 ```
 
----
+### **Step 4. Train the Model**
 
-## 🧠 Model Training
-
-Train the model from the project root:
+Run the training pipeline from the project root:
 
 ```bash
 python -m src.train
 ```
 
-During training you’ll see:
+### **Step 5. Evaluate and Test**
 
-```
-Epoch 1/3 | Loss: 1.82 | Acc: 0.47
-Epoch 2/3 | Loss: 1.15 | Acc: 0.61
-...
-✅ Model saved successfully.
-```
-
-Trained weights are stored under `saved_models/medvqa_resnet_bert.pth`.
-
----
-
-## 📈 Evaluation
-
-Evaluate validation accuracy via:
+After training completes, evaluate performance or run predictions:
 
 ```bash
-python -m src.evaluate
-```
-
-Metrics such as overall accuracy, per-answer precision, and class distribution can be extended in `evaluate.py`.
-
----
-
-## 🔍 Inference
-
-Run predictions directly:
-
-```python
-from src.inference import ask_question
-answer = ask_question("data/osfstorage/VQA_RAD Image Folder/synpic54610.jpg",
-                      "Are regions of the brain infarcted?")
-print("Predicted Answer:", answer)
+python -m src.inference
 ```
 
 ---
 
-## 🔬 Explainability (Grad-CAM)
+## 6. Streamlit Application
 
-Use Grad-CAM to visualize which regions influence predictions:
+An interactive interface for testing your model.
 
-```python
-from src.explainability import visualize_cam
-visualize_cam(model, input_tensor, [model.vision.layer4[-1]])
-```
-
-This generates heatmaps highlighting clinically relevant areas.
-
----
-
-## 🌐 Web Application
-
-Run the Streamlit interface:
+**Run the app:**
 
 ```bash
 streamlit run app/app.py
 ```
 
-### UI Features
+**Features:**
 
-* Upload a medical image (`.jpg`/`.png`)
-* Enter a natural-language question
-* View the model’s predicted answer
-* Visualize image and attention (optional)
-
----
-
-## 🧩 Key Files Explained
-
-| File                | Purpose                                                          |
-| ------------------- | ---------------------------------------------------------------- |
-| `dataset.py`        | Loads JSON annotations, tokenizes text, and preprocesses images. |
-| `model.py`          | Defines the multimodal ResNet + BERT architecture.               |
-| `train.py`          | Training loop with loss computation and accuracy logging.        |
-| `evaluate.py`       | Validation and metric functions.                                 |
-| `inference.py`      | Simple function for testing trained models.                      |
-| `explainability.py` | Implements Grad-CAM visualizations.                              |
-| `app/app.py`        | Streamlit-based demo interface.                                  |
+* Upload a medical image (JPG or PNG).
+* Type a question about the image.
+* The app displays the predicted answer and image preview.
 
 ---
 
-## 🧮 Dataset Information
+## 7. Explainability
 
-**Dataset:** [VQA-RAD (Open Science Framework)](https://osf.io/89kps/)
+Grad-CAM is used to visualize the model’s attention over the medical image, highlighting areas influencing the prediction.
+See implementation in `src/explainability.py`:
 
-* **Images:** ~315 radiology scans (CT, MRI, X-Ray)
-* **QA pairs:** ~3,500 question–answer pairs
-* **Domains:** Chest, Abdomen, Head
-* **Answer types:** Binary (yes/no) and descriptive (organ names, conditions)
-
----
-
-## 🧱 Technologies Used
-
-| Category            | Tools                             |
-| ------------------- | --------------------------------- |
-| **Language Model**  | BERT (`bert-base-uncased`)        |
-| **Vision Model**    | ResNet-50 (`torchvision.models`)  |
-| **Frameworks**      | PyTorch, HuggingFace Transformers |
-| **Visualization**   | Matplotlib, Grad-CAM              |
-| **Deployment**      | Streamlit                         |
-| **Data Processing** | Pandas, NumPy                     |
+```python
+from pytorch_grad_cam import GradCAM
+from pytorch_grad_cam.utils.image import show_cam_on_image
+```
 
 ---
 
-## 🚀 Future Improvements
+## 8. Key Python Files
 
-* 🔄 Replace BERT + ResNet with **BLIP-2** or **LLaVA-Med** for open-ended answers.
-* 🩸 Add **medical ontology grounding** (UMLS, RadLex).
-* 🌍 Merge **PathVQA**, **SLAKE**, and **VQA-Med** for larger multimodal training.
-* 🧾 Integrate **explainable reports** with textual rationale generation.
-
----
-
-## 🧑‍💻 Contributors
-
-* **Project Lead:** *Saranga Kumarapeli*
-* **Dataset Source:** *Lau et al., VQA-RAD Dataset*
-* **Frameworks Used:** PyTorch | HuggingFace | Streamlit
+| File                | Description                                      |
+| ------------------- | ------------------------------------------------ |
+| `config.py`         | Stores configuration paths and hyperparameters.  |
+| `dataset.py`        | Loads and preprocesses the VQA-RAD dataset.      |
+| `model.py`          | Defines the ResNet50 + BERT fusion architecture. |
+| `train.py`          | Trains the model and saves checkpoints.          |
+| `inference.py`      | Performs question answering inference.           |
+| `explainability.py` | Generates Grad-CAM heatmaps.                     |
+| `app.py`            | Streamlit web interface.                         |
 
 ---
 
-## 📜 License
+## 9. Requirements
 
-This project is released under the **MIT License**.
-The dataset (VQA-RAD) follows the **CC0 1.0 Universal License** as provided by OSF.
+```
+torch
+torchvision
+transformers
+datasets
+pandas
+numpy
+pillow
+tqdm
+scikit-learn
+matplotlib
+streamlit
+grad-cam
+```
 
 ---
 
-## 💬 Acknowledgements
+## 10. Future Enhancements
 
-* *VQA-RAD: Visual Question Answering in Radiology* (Lau et al., 2018)
-* Hugging Face for model backbones
-* PyTorch and Streamlit communities
+* Integrate **BioViL-T** or **BLIP-2-Med** for transformer-based multimodal reasoning.
+* Extend to additional datasets such as **PathVQA** or **VQA-Med 2021**.
+* Add **sequence-to-sequence answer generation** for open-ended questions.
+* Implement **attention visualization** for better interpretability.
 
 ---
 
-> 🧩 *This repository demonstrates how multimodal AI can aid clinical reasoning by bridging computer vision and natural language understanding in radiology.*
+## 11. References
+
+* Lau, J. J., Gayen, S., Ben Abacha, A., & Demner-Fushman, D. (2018).
+  *A dataset of clinically generated visual questions and answers about radiology images (VQA-RAD)*.
+  arXiv preprint arXiv:1807.10221.
+
+* Hugging Face Dataset Card: [https://huggingface.co/datasets/flaviagiammarino/vqa-rad](https://huggingface.co/datasets/flaviagiammarino/vqa-rad)
